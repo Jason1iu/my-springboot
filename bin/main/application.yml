@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:sqlserver://127.0.0.1:1433;databaseName=testDB;responseBuffering=adaptive
+    username: sa
+    password: 123456
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 10000 
