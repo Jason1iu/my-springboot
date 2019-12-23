@@ -1,4 +1,4 @@
-package com.example.myspringboot.service.impl;
+package com.example.myspringboot.security;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,9 +41,6 @@ public class MyInvocationSecurityMetadataSourceService implements FilterInvocati
 	 */
 	@Override
 	public Collection<ConfigAttribute> getAttributes(Object object) throws IllegalArgumentException {
-		if (null == map) {
-			this.loadResourceDefine();
-		}
 		// object中包含用户请求的request信息
 		HttpServletRequest request = ((FilterInvocation) object).getHttpRequest();
 		for (Iterator<String> it = map.keySet().iterator(); it.hasNext();) {
@@ -58,6 +55,7 @@ public class MyInvocationSecurityMetadataSourceService implements FilterInvocati
 	// Spring容器启动时自动调用，一般把所有请求与权限的对应关系也要在这个方法里初始化，保存在一个属性变量里
 	@Override
 	public Collection<ConfigAttribute> getAllConfigAttributes() {
+		this.loadResourceDefine();
 		return null;
 	}
 
@@ -67,6 +65,9 @@ public class MyInvocationSecurityMetadataSourceService implements FilterInvocati
 		return true;
 	}
 
+	/**
+	 * 初始化 所有资源对应的角色
+	 */
 	public void loadResourceDefine() {
 		map = new HashMap<>(16);
 		// 权限资源和角色对应的表，就是角色权限中间表

@@ -1,7 +1,11 @@
 package com.example.myspringboot.security;
 
+import java.util.Objects;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -23,16 +27,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Autowired
 	private MyUserDetailsService userDetailsService;
 
-	@Autowired
-	public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+	@Override
+	public void configure(AuthenticationManagerBuilder auth) throws Exception {
 		// 校验用户
 		auth.userDetailsService(userDetailsService).passwordEncoder(new PasswordEncoder() {
 			// 对密码进行加密
 			@Override
 			public String encode(CharSequence rawPassword) {
-//				System.out.println(rawPassword.toString());
 				String md5String = DigestUtils.md5DigestAsHex(rawPassword.toString().getBytes());
-//				System.out.println(md5String);
 				return md5String;
 			}
 
@@ -40,12 +42,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			@Override
 			public boolean matches(CharSequence rawPassword, String encodedPassword) {
 				String encode = DigestUtils.md5DigestAsHex(rawPassword.toString().getBytes());
-//				System.out.println("====");
-//				System.out.println(encodedPassword);
-//				System.out.println(encode);
 				boolean res = encodedPassword.equals(encode);
-//				System.out.println(res);
-//				System.out.println("====");
 				return res;
 			}
 
@@ -58,11 +55,39 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //		http.authorizeRequests(authorizeRequests -> authorizeRequests.antMatchers("/css/**", "/index").permitAll()
 //				.antMatchers("/user/**").hasRole("USER"))
 //				.formLogin(formLogin -> formLogin.loginPage("/login").failureUrl("/login-error"));
-		http.authorizeRequests().antMatchers("/", "index", "/login", "login-error", "/401", "/css/**", "/js/**")
-				.permitAll().anyRequest().authenticated().and().formLogin().loginPage("/login")
-				.failureUrl("/login-error").and().exceptionHandling().accessDeniedPage("/401");
-		http.logout().logoutSuccessUrl("/");
+		http.csrf().disable();
+		http.requestMatchers()
+			.antMatchers("/oauth/**", "/login", "/login-error")
+			.and()
+			.authorizeRequests()
+			.antMatchers("/oauth/**").authenticated()
+			.and()
+			.formLogin().loginPage("/login").failureUrl("/login-error");
+			
 	}
 	// @formatter:on
 
+	@Override
+	@Bean
+	public AuthenticationManager authenticationManagerBean() throws Exception {
+		return super.authenticationManager();
+	}
+	
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new PasswordEncoder() {
+
+			@Override
+			public String encode(CharSequence rawPassword) {
+				return rawPassword.toString();
+			}
+
+			@Override
+			public boolean matches(CharSequence rawPassword, String encodedPassword) {
+				return Objects.equals(rawPassword.toString(), encodedPassword);
+			}
+			
+		};
+	}
+	
 }

@@ -1,4 +1,4 @@
-package com.example.myspringboot.service.impl;
+package com.example.myspringboot.security;
 
 import java.io.IOException;
 
@@ -7,6 +7,8 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.SecurityMetadataSource;
@@ -37,7 +39,15 @@ public class MyFilterSecurityInterceptor extends AbstractSecurityInterceptor imp
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
 		FilterInvocation fi = new FilterInvocation(request, response, chain);
-		invoke(fi);
+		HttpServletRequest req = (HttpServletRequest) request;
+		HttpServletResponse resp = (HttpServletResponse) response;
+		resp.setHeader("Access-Control-Allow-Origin", "*");
+		resp.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
+		resp.setHeader("Access-Control-Allow-Headers", ":x-requested-with,content-type");
+		chain.doFilter(request, response);
+		if(!req.getRequestURI().equals("/oauth/token")) {
+			invoke(fi);
+		}
 	}
 
 	public void invoke(FilterInvocation fi) throws IOException, ServletException {
